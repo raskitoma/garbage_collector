@@ -47,8 +47,8 @@ process_backups() {
         fi
 
         for keep_policy in "${!keeper_policy[@]}"; do
-            # get index of the current policy
-            my_index=$(echo $keep_policy | grep -oP "\d")
+            # get index of keeper_policy in keeper_policy array
+            my_index=$(echo ${keeper_policy[@]} | grep -o "\b$keep_policy\b" | wc -l)
 
             log_message "my index: $my_index"
 
