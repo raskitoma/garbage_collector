@@ -60,7 +60,7 @@ process_backups() {
         fi
     done
     # Process daily backups
-    for ((day = 1; day <= $current_day; day++)); do
+    for ((day = 8; day <= $current_day; day++)); do
         daily_backup="$current_year-$current_month-$(printf "%02d" $day)"
         if [ "$daily_backup" == "$(date +'%Y-%m-%d')" ]; then
             log_message "Keeping daily backup: $daily_backup"
@@ -98,7 +98,7 @@ log_message "Starting garbage collection at $(date +'%Y-%m-%d %H:%M:%S') <<<<<<"
 while IFS= read -r line || [ -n "$line" ]; do
     if [[ $line =~ ^\[(.*)\] ]]; then
         section="${BASH_REMATCH[1]}"
-        log_message "Entering section: $section"
+        log_message ">>> Processing backups for section: $section"
         echo "====================" | tee -a "$SCRIPT_DIR/logs/$(date +'%Y-%m-%d')_garbage_collector.log"
         process_backups "$section"
     fi
