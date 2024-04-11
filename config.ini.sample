@@ -1,0 +1,15 @@
+[/path/to/folder/with/backups]
+keep= # keep n by year, n monthly by year, n weekly by month, n daily by week for all backups
+keep_full=0,0,0,7  # keep n by year, n monthly by year, n weekly by month, n daily by week for full backups
+keep_diff=0,0,0,0  # keep n by year, n monthly by year, n weekly by month, n daily by week for differential backups
+keep_incr=0,0,0,0  # keep n by year, n monthly by year, n weekly by month, n daily by week for incremental backups
+
+[/other/folder/with/backups]
+keep_full=0,0,0,7
+keep_diff=0,0,0,0
+keep_incr=0,0,0,0
+
+[/other/folder/with/more/backups]
+keep=0,0,0,7
+
+
