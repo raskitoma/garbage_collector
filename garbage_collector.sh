@@ -32,6 +32,7 @@ process_backups() {
     extension="$3"
     keeper_policy=["$4","$5","$6","$7"]
     keeper_prefix=["","full-","diff-","incr-"]
+    keeper_policy_name=["Standard/Dumps","Full","Differential","Incremental"]
 
     cd "$folder" || { log_error "Failed to enter directory $folder"; return; }
     log_message "> Entering directory: $folder"
@@ -45,44 +46,30 @@ process_backups() {
             continue
         fi
 
-        # Check if keeper_policy is set
-        if [ -n "${keeper_policy[0]}" ]; then
-            # Assign policy values
-            keep_yearly="${keeper_policy[0]}"
-            keep_monthly="${keeper_policy[1]}"
-            keep_weekly="${keeper_policy[2]}"
-            keep_daily="${keeper_policy[3]}"
-
-            expected_filename_template=${keeper_prefix[1]}[0-9]{4}$date_format\.$extension$
-
-            log_message "processing file: $file with current policy: ${keeper_policy[@]} as ${keeper_prefix[@]} with date format: $date_format and extension: $extension"
-            log_message "with expected filename template: $expected_filename_template"
-            log_message "Yearly is set to $keep_yearly, Monthly is set to $keep_monthly, Weekly is set to $keep_weekly, Daily is set to $keep_daily"
-
-            # Yearly keeper policy
-            if [ "$keep_yearly" -gt 0 ]; then
-                # Check if the file matches the format and decide whether to keep it based on the policy
-                if [[ $file =~ ^${keeper_prefix[1]}[0-9]{4}$date_format\.$extension$ ]]; then
-                    log_message "processing file: $file"
-
-                    # lets check if the file is the last one in the year
-                    year="${file:5:4}"
-                    if [ ! -f "${keeper_prefix[1]}$(($year + 1))$date_format.$extension" ]; then
-                        marked_for_deletion+=("$file")
-                    else 
-                        log_message "keeping file: $file"
-                    fi
-                    
-
-
+        for keep_policy in "${!keeper_policy[@]}"; do
+            if [[ $file == ${keeper_prefix[$keep_policy]}*.$extension ]]; then
+                # Extract date from filename
+                date_string=$(echo "$file" | grep -oP "\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}")
+                if [ -z "$date_string" ]; then
+                    log_error "Failed to extract date from filename: $file"
+                    continue
+                fi
+                # Convert date to epoch
+                epoch_date=$(date -d "$date_string" +"%s")
+                if [ -z "$epoch_date" ]; then
+                    log_error "Failed to convert date to epoch: $date_string"
+                    continue
+                fi
+                # Calculate the age of the file
+                current_date=$(date '+%s')
+                age=$((current_date - epoch_date))
+                # Check if the file should be deleted
+                if [ $age -gt $((keeper_policy[$keep_policy] * 86400)) ]; then
+                    log_message "File $file is older than ${keeper_policy_name[$keep_policy]} policy. Age: $(date -u -d "@$age" +'%d days %H hours %M minutes %S seconds')"
+                    marked_for_deletion+=("$file")
                 fi
             fi
-            
-            # Your logic to handle the file based on the keeper policy goes here
-            # For example:
-            # Check if the file matches the format and decide whether to keep it based on the policy
-        fi
-
+        done
 
 
     done
