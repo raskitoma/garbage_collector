@@ -28,8 +28,8 @@ process_backups() {
     folder="$1"
     date_format="$2"
     extension="$3"
-    keeper_policy=[ "$4", "$5", "$6", "$7"]
-    keeper_prefix=[ "", "full-", "diff-", "incr-"]
+    keeper_policy=["$4","$5","$6","$7"]
+    keeper_prefix=["","full-","diff-","incr-"]
 
     cd "$folder" || { log_error "Failed to enter directory $folder"; return; }
     log_message "> Entering directory: $folder"
