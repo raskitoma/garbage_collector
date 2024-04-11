@@ -30,9 +30,9 @@ process_backups() {
     folder="$1"
     date_format="$2"
     extension="$3"
-    keeper_policy=["$4","$5","$6","$7"]
-    keeper_prefix=["","full-","diff-","incr-"]
-    keeper_policy_name=["Standard/Dumps","Full","Differential","Incremental"]
+    keeper_policy=("$4" "$5" "$6" "$7")
+    keeper_prefix=("" "full-" "diff-" "incr-")
+    keeper_policy_name=("Standard/Dumps" "Full" "Differential" "Incremental")
 
     cd "$folder" || { log_error "Failed to enter directory $folder"; return; }
     log_message "> Entering directory: $folder"
@@ -46,24 +46,18 @@ process_backups() {
             continue
         fi
 
-        policy_index=0
-
-        for keep_policy in "${!keeper_policy[@]}"; do
-            ((policy_index++))
-            
-            log_message "my index: $policy_index"
-
-            # Check if policy is set (not empty)
-            if [ -z "${keeper_policy[$keep_policy]}" ]; then
-                log_message "> Policy ${keeper_policy_name[$policy_index]} is not set. Skipping."
-                continue
+        # Iterate through each value in keeper_policy
+        for ((i = 0; i < ${#keeper_policy[@]}; i++)); do
+            # Get the index
+            index=$i
+            # Check if keeper_policy value is empty
+            if [[ -z "${keeper_policy[$i]}" ]]; then
+                echo "${keeper_policy_name[$index]} is disabled."
+            else
+                echo "${keeper_policy_name[$index]} is enabled as ${keeper_prefix[$index]}${keeper_policy[$i]}."
             fi
-
-
-
         done
-
-
+        
     done
 
     cd ..
