@@ -58,6 +58,7 @@ process_backups() {
 
                 # Define the template
                 template_for_file_name="${keeper_prefix[*]}*$(date +"$date_format")*.$extension"
+                log_message "Template for file name: $template_for_file_name"
 
                 # Check if the file matches the template expression
                 if [[ "$file" =~ $template_for_file_name ]]; then
