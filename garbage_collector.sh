@@ -28,10 +28,8 @@ process_backups() {
     folder="$1"
     date_format="$2"
     extension="$3"
-    keep="$4"
-    keep_full="$5"
-    keep_diff="$6"
-    keep_incr="$7"
+    keeper_policy=[ "$4", "$5", "$6", "$7"]
+    keeper_prefix=[ "", "full-", "diff-", "incr-"]
 
     cd "$folder" || { log_error "Failed to enter directory $folder"; return; }
     log_message "> Entering directory: $folder"
@@ -41,12 +39,24 @@ process_backups() {
         # first, checks if the file is a directory
         if [ -d "$file" ]; then
             log_message "> Processing subfolder: $file"
-            process_backups "$file"
+            process_backups "$file" "$date_format" "$extension" "${keeper_policy[@]}"
             continue
         fi
 
         log_message "Processing file: $file"
 
+        # Check if keeper_policy is set
+        if [ -n "${keeper_policy[0]}" ]; then
+            # Assign policy values
+            keep_yearly="${keeper_policy[0]}"
+            keep_monthly="${keeper_policy[1]}"
+            keep_weekly="${keeper_policy[2]}"
+            keep_daily="${keeper_policy[3]}"
+            
+            # Your logic to handle the file based on the keeper policy goes here
+            # For example:
+            # Check if the file matches the format and decide whether to keep it based on the policy
+        fi
 
 
 
