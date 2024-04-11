@@ -107,7 +107,7 @@ while IFS= read -r line || [ -n "$line" ]; do
         section="${BASH_REMATCH[1]}"
         log_message ">>> Processing backups for section: $section <<<"
         
-        # Extract additional variables from config for current section
+        # Use file descriptor to read config file without restarting from the beginning
         while IFS= read -r line2 || [ -n "$line2" ]; do
             if [[ $line2 =~ ^date_format=(.*) ]]; then
                 date_format="${BASH_REMATCH[1]}"
@@ -122,7 +122,7 @@ while IFS= read -r line || [ -n "$line" ]; do
             elif [[ $line2 =~ ^keep_incr=(.*) ]]; then
                 keep_incr="${BASH_REMATCH[1]}"
             fi
-        done < "$SCRIPT_DIR/config.ini"
+        done < <(awk "/^\[$section\]/,/^$/ {print}" "$SCRIPT_DIR/config.ini")
         
         log_message "Variables: date_format=$date_format, extension=$extension, keep=$keep, keep_full=$keep_full, keep_diff=$keep_diff, keep_incr=$keep_incr"
         process_backups "$section" "$date_format" "$extension" "$keep" "$keep_full" "$keep_diff" "$keep_incr"
