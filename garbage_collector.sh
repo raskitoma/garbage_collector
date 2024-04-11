@@ -48,15 +48,14 @@ process_backups() {
 
         for keep_policy in "${!keeper_policy[@]}"; do
             # get index of the current policy
-            my_index=$(echo $keep_policy | grep -oP "\d")
+            my_index=${keep_policy//[!0-9]/}
 
-            # check if policy is set (not empty)
+            log_message "my index: $my_index"
+
+            # Check if policy is set (not empty)
             if [ -z "${keeper_policy[$keep_policy]}" ]; then
                 log_message "> Policy ${keeper_policy_name[$my_index]} is not set. Skipping."
                 continue
-            elif
-                continue
-                # Extract date from the file name
             fi
 
 
