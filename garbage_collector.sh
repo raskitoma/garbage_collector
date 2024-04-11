@@ -1,15 +1,18 @@
 #!/bin/bash
 
+# Get the directory where the script is located
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+
 # Function to log errors
 log_error() {
     message="$(date +'%Y-%m-%d %H:%M:%S') ERROR: $1"
-    echo "$message" | tee -a "logs/$(date +'%Y-%m-%d')_error.log"
+    echo "$message" | tee -a "$SCRIPT_DIR/logs/$(date +'%Y-%m-%d')_error.log"
 }
 
 # Function to log messages
 log_message() {
     message="$(date +'%Y-%m-%d %H:%M:%S') INFO: $1"
-    echo "$message" | tee -a "logs/$(date +'%Y-%m-%d')_garbage_collector.log"
+    echo "$message" | tee -a "$SCRIPT_DIR/logs/$(date +'%Y-%m-%d')_garbage_collector.log"
 }
 
 # Function to delete files
@@ -21,14 +24,14 @@ delete_file() {
 }
 
 # Check if config.ini exists
-if [ ! -f "config.ini" ]; then
+if [ ! -f "$SCRIPT_DIR/config.ini" ]; then
     log_error "config.ini file not found. Exiting."
     exit 1
 fi
 
 # Check if logs directory exists, if not, create it
-if [ ! -d "logs" ]; then
-    mkdir "logs" || { echo "Failed to create logs directory. Exiting."; exit 1; }
+if [ ! -d "$SCRIPT_DIR/logs" ]; then
+    mkdir "$SCRIPT_DIR/logs" || { echo "Failed to create logs directory. Exiting."; exit 1; }
 fi
 
 # Read config file and process each section
@@ -94,6 +97,6 @@ while IFS= read -r line || [ -n "$line" ]; do
         # Exit directory
         cd ..
     fi
-done < "config.ini"
+done < "$SCRIPT_DIR/config.ini"
 
 log_message "Garbage collection completed."
