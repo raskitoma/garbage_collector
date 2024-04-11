@@ -27,14 +27,20 @@ delete_file() {
 process_backups() {
     folder="$1"
     cd "$folder" || { log_error "Failed to enter directory $folder"; return; }
-    log_message "Entering directory: $folder"
+    log_message ">> Entering directory: $folder"
     
     # Loop through files in the directory
     for file in *; do
+        # first, checks if the file is a directory
+        if [ -d "$file" ]; then
+            log_message "> Processing subfolder: $file"
+            process_backups "$file"
+            continue
+        fi
+
         log_message "Processing file: $file"
         # Check if the file matches the pattern (yyyy-mm-dd)
         if [[ $file =~ ^(?:full-|diff-|incr-)?([a-zA-Z0-9]+)[-_]([0-9]{8})-[0-9]{2}(?:\.tar\.gz)?$ ]]; then
-
 
             backup_date="${BASH_REMATCH[1]}"
             current_year=$(date +'%Y')
@@ -96,14 +102,7 @@ process_backups() {
             fi
         fi
     done
-    
-    # Process subfolders recursively
-    for subfolder in */; do
-        if [ -d "$subfolder" ]; then
-            process_backups "$subfolder"
-        fi
-    done
-    
+
     cd ..
 }
 
@@ -120,22 +119,20 @@ if [ ! -d "$SCRIPT_DIR/logs" ]; then
 fi
 
 # Start logging
+start_time=$(date '+%s')
 echo "" | tee -a "$SCRIPT_DIR/logs/$(date +'%Y-%m-%d')_garbage_collector.log"
 log_message "Starting garbage collection at $(date +'%Y-%m-%d %H:%M:%S') <<<<<<"
-
 
 # Process backups for each section in the config file
 while IFS= read -r line || [ -n "$line" ]; do
     if [[ $line =~ ^\[(.*)\] ]]; then
         section="${BASH_REMATCH[1]}"
-        log_message ">>> Processing backups for section: $section"
-        echo "====================" | tee -a "$SCRIPT_DIR/logs/$(date +'%Y-%m-%d')_garbage_collector.log"
+        log_message ">>> Processing backups for section: $section <<<"
         process_backups "$section"
     fi
 done < "$SCRIPT_DIR/config.ini"
 
 # End logging
-start_time=$(date -d "$(head -n 2 "$SCRIPT_DIR/logs/$(date +'%Y-%m-%d')_garbage_collector.log" | tail -n 1 | cut -d' ' -f5-)" '+%s')
 end_time=$(date '+%s')
 time_taken=$((end_time - start_time))
 log_message "Garbage collection completed. It took $(date -u -d "@$time_taken" +'%H:%M:%S'). <<<<<<"
