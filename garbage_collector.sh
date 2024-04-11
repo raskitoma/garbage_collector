@@ -48,7 +48,7 @@ process_backups() {
 
         for keep_policy in "${!keeper_policy[@]}"; do
             # get index of the current policy
-            my_index=$(awk -F'[^0-9]+' '{print $2}' <<< "$keep_policy")
+            my_index=$(($keep_policy + 1))
 
             log_message "my index: $my_index"
 
