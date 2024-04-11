@@ -38,6 +38,8 @@ process_backups() {
             current_year=$(date +'%Y')
             current_month=$(date +'%m')
             current_day=$(date +'%d')
+
+            log_message "Backup date: $backup_date, we found a match! Current date: $current_year-$current_month-$current_day, file: $file"
             
             # Check if the file is a yearly backup
             if [[ "$backup_date" == "${current_year}-12-31" ]]; then
