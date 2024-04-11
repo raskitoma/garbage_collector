@@ -41,8 +41,8 @@ process_backups() {
     for file in *; do
         # first, checks if the file is a directory
         if [ -d "$file" ]; then
-            log_message "> Processing subfolder: $file"
-            process_backups "$file" "$date_format" "$extension" "$4" "$5" "$6" "$7"
+            log_message "> Processing subfolder: $file with policy: ${keeper_policy[@]}"
+            process_backups "$file" "$date_format" "$extension" "${keeper_policy[@]}"
             continue
         fi
 
