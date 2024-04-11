@@ -43,7 +43,7 @@ process_backups() {
     for ((month = 1; month <= $current_month; month++)); do
         monthly_backup="$current_year-$(printf "%02d" $month)-$(cal $month $current_year | grep -v "^$" | tail -1 | awk '{print $NF}')"
         if [ "$month" -eq "$current_month" ]; then
-            log_message "Keeping monthly backup: $monthly_backup"
+            log_message "Keeping monthly backup: $current_year-$current_month-$current_day"
         else
             delete_file "$monthly_backup"
         fi
@@ -71,6 +71,7 @@ process_backups() {
     # Process subfolders recursively
     for subfolder in */; do
         if [ -d "$subfolder" ]; then
+            log_message ">>> Processing backups for section: $folder$subfolder"
             process_backups "$subfolder"
         fi
     done
@@ -88,6 +89,11 @@ if [ ! -d "$SCRIPT_DIR/logs" ]; then
     mkdir "$SCRIPT_DIR/logs" || { log_error "Failed to create logs directory. Exiting."; exit 1; }
 fi
 
+# Start logging
+echo "" | tee -a "$SCRIPT_DIR/logs/$(date +'%Y-%m-%d')_garbage_collector.log"
+log_message "Starting garbage collection at $(date +'%Y-%m-%d %H:%M:%S') <<<<<<"
+
+
 # Process backups for each section in the config file
 while IFS= read -r line || [ -n "$line" ]; do
     if [[ $line =~ ^\[(.*)\] ]]; then
@@ -98,4 +104,9 @@ while IFS= read -r line || [ -n "$line" ]; do
     fi
 done < "$SCRIPT_DIR/config.ini"
 
-log_message "Garbage collection completed."
+# End logging
+start_time=$(date -d "$(head -n 2 "$SCRIPT_DIR/logs/$(date +'%Y-%m-%d')_garbage_collector.log" | tail -n 1 | cut -d' ' -f5-)" '+%s')
+end_time=$(date '+%s')
+time_taken=$((end_time - start_time))
+log_message "Garbage collection completed. It took $(date -u -d "@$time_taken" +'%H:%M:%S'). <<<<<<"
+
