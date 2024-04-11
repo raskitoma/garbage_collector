@@ -47,28 +47,20 @@ process_backups() {
         fi
 
         for keep_policy in "${!keeper_policy[@]}"; do
-            if [[ $file == ${keeper_prefix[$keep_policy]}*.$extension ]]; then
-                # Extract date from filename
-                date_string=$(echo "$file" | grep -oP "\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}")
-                if [ -z "$date_string" ]; then
-                    log_error "Failed to extract date from filename: $file"
-                    continue
-                fi
-                # Convert date to epoch
-                epoch_date=$(date -d "$date_string" +"%s")
-                if [ -z "$epoch_date" ]; then
-                    log_error "Failed to convert date to epoch: $date_string"
-                    continue
-                fi
-                # Calculate the age of the file
-                current_date=$(date '+%s')
-                age=$((current_date - epoch_date))
-                # Check if the file should be deleted
-                if [ $age -gt $((keeper_policy[$keep_policy] * 86400)) ]; then
-                    log_message "File $file is older than ${keeper_policy_name[$keep_policy]} policy. Age: $(date -u -d "@$age" +'%d days %H hours %M minutes %S seconds')"
-                    marked_for_deletion+=("$file")
-                fi
+            # get index of the current policy
+            my_index=$(echo $keep_policy | grep -oP "\d")
+
+            # check if policy is set (not empty)
+            if [ -z "${keeper_policy[$keep_policy]}" ]; then
+                log_message "> Policy ${keeper_policy_name[$my_index]} is not set. Skipping."
+                continue
+            elif
+                log_message "> Processing file: $file"
+                # Extract date from the file name
             fi
+
+
+
         done
 
 
