@@ -26,6 +26,11 @@ if [ ! -f "config.ini" ]; then
     exit 1
 fi
 
+# Check if logs directory exists, if not, create it
+if [ ! -d "logs" ]; then
+    mkdir "logs" || { echo "Failed to create logs directory. Exiting."; exit 1; }
+fi
+
 # Read config file and process each section
 while IFS= read -r line || [ -n "$line" ]; do
     if [[ $line =~ ^\[(.*)\] ]]; then
