@@ -57,7 +57,7 @@ process_backups() {
                 log_message "${keeper_policy_name[$index]} is enabled as ${keeper_prefix[$index]}${keeper_policy[$i]}."
 
                 # Define the template
-                template_for_file_name="${keeper_prefix[$index]// /.}*.$extension"
+                template_for_file_name="${keeper_prefix[$index]// /.}*$extension"
 
                 # Remove spaces from the template
                 template_for_file_name="${template_for_file_name// /.}"
