@@ -27,56 +27,81 @@ delete_file() {
 process_backups() {
     folder="$1"
     cd "$folder" || { log_error "Failed to enter directory $folder"; return; }
-    log_message "Processing backups for section: $folder"
-    # Determine current date
-    current_year=$(date +'%Y')
-    current_month=$(date +'%m')
-    current_day=$(date +'%d')
-    # Process yearly backup
-    yearly_backup="$current_year-12-31"
-    if [ "$current_month" -eq 12 ] && [ "$current_day" -eq 31 ]; then
-        log_message "Keeping yearly backup: $yearly_backup"
-    else
-        delete_file "$yearly_backup"
-    fi
-    # Process monthly backups
-    for ((month = 1; month <= $current_month; month++)); do
-        monthly_backup="$current_year-$(printf "%02d" $month)-$(cal $month $current_year | grep -v "^$" | tail -1 | awk '{print $NF}')"
-        if [ "$month" -eq "$current_month" ]; then
-            log_message "Keeping monthly backup: $current_year-$current_month-$current_day"
-        else
-            delete_file "$monthly_backup"
-        fi
-    done
-    # Process weekly backups
-    for ((day = 0; day < 7; day++)); do
-        weekly_backup=$(date -d "last Monday - $day days" +'%Y-%m-%d')
-        if [ $(date -d "$weekly_backup" +'%m') -eq $current_month ]; then
-            if [ "$weekly_backup" -ge "$(date +'%Y-%m-%d')" ]; then
-                log_message "Keeping weekly backup: $weekly_backup"
-            else
-                delete_file "$weekly_backup"
+    log_message "Entering directory: $folder"
+    
+    # Loop through files in the directory
+    for file in *; do
+        # Check if the file matches the pattern (yyyy-mm-dd)
+        if [[ $file =~ ^([0-9]{4}-[0-9]{2}-[0-9]{2}) ]]; then
+            backup_date="${BASH_REMATCH[1]}"
+            current_year=$(date +'%Y')
+            current_month=$(date +'%m')
+            current_day=$(date +'%d')
+            
+            # Check if the file is a yearly backup
+            if [[ "$backup_date" == "${current_year}-12-31" ]]; then
+                log_message "Keeping yearly backup: $file"
+                continue
+            fi
+            
+            # Check if the file is a monthly backup
+            if [[ "$backup_date" =~ ^${current_year}-[0-9]{2}- ]]; then
+                if [[ "$backup_date" =~ ^${current_year}-${current_month}- ]]; then
+                    log_message "Keeping monthly backup: $file"
+                else
+                    delete_file "$file"
+                fi
+                continue
+            fi
+            
+            # Check if the file is a weekly backup
+            if [[ "$backup_date" =~ ^([0-9]{4})-([0-9]{2})-([0-9]{2}) ]]; then
+                year="${BASH_REMATCH[1]}"
+                month="${BASH_REMATCH[2]}"
+                day="${BASH_REMATCH[3]}"
+                week_day=$(date -d "$year-$month-$day" +%u)
+                if [[ "$week_day" -ge 1 ]] && [[ "$week_day" -le 7 ]]; then
+                    if [[ "$month" == "$current_month" ]] && [[ "$day" -ge $((current_day - (week_day - 1))) ]]; then
+                        if [[ "$backup_date" == "$(date +'%Y-%m-%d')" ]]; then
+                            log_message "Keeping weekly backup: $file"
+                        else
+                            delete_file "$file"
+                        fi
+                    else
+                        delete_file "$file"
+                    fi
+                else
+                    delete_file "$file"
+                fi
+                continue
+            fi
+            
+            # Check if the file is a daily backup
+            if [[ "$backup_date" =~ ^${current_year}-${current_month}- ]]; then
+                if [[ "$backup_date" =~ ^${current_year}-${current_month}-[0-9]{2}$ ]]; then
+                    if [[ "$backup_date" == "$(date +'%Y-%m-%d')" ]]; then
+                        log_message "Keeping daily backup: $file"
+                    else
+                        delete_file "$file"
+                    fi
+                else
+                    delete_file "$file"
+                fi
+                continue
             fi
         fi
     done
-    # Process daily backups
-    for ((day = 8; day <= $current_day; day++)); do
-        daily_backup="$current_year-$current_month-$(printf "%02d" $day)"
-        if [ "$daily_backup" == "$(date +'%Y-%m-%d')" ]; then
-            log_message "Keeping daily backup: $daily_backup"
-        else
-            delete_file "$daily_backup"
-        fi
-    done
+    
     # Process subfolders recursively
     for subfolder in */; do
         if [ -d "$subfolder" ]; then
-            log_message ">>> Processing backups for section: $folder$subfolder"
             process_backups "$subfolder"
         fi
     done
+    
     cd ..
 }
+
 
 # Check if config.ini exists
 if [ ! -f "$SCRIPT_DIR/config.ini" ]; then
