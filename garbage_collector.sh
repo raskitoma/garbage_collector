@@ -52,9 +52,9 @@ process_backups() {
             index=$i
             # Check if keeper_policy value is empty
             if [[ -z "${keeper_policy[$i]}" ]]; then
-                echo "${keeper_policy_name[$index]} is disabled."
+                log_message "${keeper_policy_name[$index]} is disabled."
             else
-                echo "${keeper_policy_name[$index]} is enabled as ${keeper_prefix[$index]}${keeper_policy[$i]}."
+                log_message "${keeper_policy_name[$index]} is enabled as ${keeper_prefix[$index]}${keeper_policy[$i]}."
 
                 # Define the template
                 template_for_file_name="${keeper_prefix[$index]}*$(date +"$date_format")*$extension"
@@ -63,9 +63,9 @@ process_backups() {
 
                 # Check if the file matches the template expression
                 if [[ "$file" =~ $template_for_file_name ]]; then
-                    echo "File matches the template expression."
+                    log_message "$file matches the template expression."
                 else
-                    echo "Skipping file."
+                    log_message "$file doesn't have a matching template expression. Skipping file."
                 fi                
 
             fi
