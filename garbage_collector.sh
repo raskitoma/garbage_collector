@@ -55,7 +55,7 @@ process_backups() {
                 log_message "> Policy ${keeper_policy_name[$my_index]} is not set. Skipping."
                 continue
             elif
-                log_message "> Processing file: $file"
+                continue
                 # Extract date from the file name
             fi
 
