@@ -26,6 +26,13 @@ delete_file() {
 # Function to process backups in a folder
 process_backups() {
     folder="$1"
+    date_format="$2"
+    extension="$3"
+    keep="$4"
+    keep_full="$5"
+    keep_diff="$6"
+    keep_incr="$7"
+
     cd "$folder" || { log_error "Failed to enter directory $folder"; return; }
     log_message "> Entering directory: $folder"
     
@@ -38,7 +45,7 @@ process_backups() {
             continue
         fi
 
-        log_message "Processing file: $file ${BASH_REMATCH[@]}"
+        log_message "Processing file: $file"
 
 
 
@@ -70,7 +77,23 @@ while IFS= read -r line || [ -n "$line" ]; do
     if [[ $line =~ ^\[(.*)\] ]]; then
         section="${BASH_REMATCH[1]}"
         log_message ">>> Processing backups for section: $section <<<"
-        process_backups "$section"
+        # Extract additional variables from config
+        while IFS= read -r line || [ -n "$line" ]; do
+            if [[ $line =~ ^date_format=(.*) ]]; then
+                date_format="${BASH_REMATCH[1]}"
+            elif [[ $line =~ ^extension=(.*) ]]; then
+                extension="${BASH_REMATCH[1]}"
+            elif [[ $line =~ ^keep=(.*) ]]; then
+                keep="${BASH_REMATCH[1]}"
+            elif [[ $line =~ ^keep_full=(.*) ]]; then
+                keep_full="${BASH_REMATCH[1]}"
+            elif [[ $line =~ ^keep_diff=(.*) ]]; then
+                keep_diff="${BASH_REMATCH[1]}"
+            elif [[ $line =~ ^keep_incr=(.*) ]]; then
+                keep_incr="${BASH_REMATCH[1]}"
+            fi
+        done < "$SCRIPT_DIR/config.ini"
+        process_backups "$section" "$date_format" "$extension" "$keep" "$keep_full" "$keep_diff" "$keep_incr"
     fi
 done < "$SCRIPT_DIR/config.ini"
 

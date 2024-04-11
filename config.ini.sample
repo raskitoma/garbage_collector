@@ -1,15 +1,29 @@
+# Each keep line has 4 values, separated by commas, values can be 0 or 1 (as switches off/on).
+# This is the order: keep one backup by year, one by each month of current year, one by each week of current month, one by each day of current week
+# You need to set each variable. If you want to skip one, simple define it as empty.
+
 [/path/to/folder/with/backups]
-keep= # keep n by year, n monthly by year, n weekly by month, n daily by week for all backups
-keep_full=0,0,0,7  # keep n by year, n monthly by year, n weekly by month, n daily by week for full backups
-keep_diff=0,0,0,0  # keep n by year, n monthly by year, n weekly by month, n daily by week for differential backups
-keep_incr=0,0,0,0  # keep n by year, n monthly by year, n weekly by month, n daily by week for incremental backups
+date_format=%Y%m%d
+extension=.tar.gz
+keep=1,1,1,1
+keep_full=0,0,0,1
+keep_diff=0,0,0,1
+keep_incr=0,0,1,0
 
 [/other/folder/with/backups]
-keep_full=0,0,0,7
-keep_diff=0,0,0,0
-keep_incr=0,0,0,0
+format=%Y%m%d
+extension=.tar.gz
+keep=
+keep_full=0,0,0,1
+keep_diff=
+keep_incr=
 
 [/other/folder/with/more/backups]
-keep=0,0,0,7
+date_format=%Y-%m-%d
+extension=.sql.gz
+keep=
+keep_full=0,0,0,1
+keep_diff=
+keep_incr=0,0,1,0
 
 
