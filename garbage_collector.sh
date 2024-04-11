@@ -93,29 +93,47 @@ start_time=$(date '+%s')
 echo "" | tee -a "$SCRIPT_DIR/logs/$(date +'%Y-%m-%d')_garbage_collector.log"
 log_message "Starting garbage collection at $(date +'%Y-%m-%d %H:%M:%S') <<<<<<"
 
+# Initialize variables
+date_format=""
+extension=""
+keep=""
+keep_full=""
+keep_diff=""
+keep_incr=""
+
 # Process backups for each section in the config file
 while IFS= read -r line || [ -n "$line" ]; do
     if [[ $line =~ ^\[(.*)\] ]]; then
         section="${BASH_REMATCH[1]}"
         log_message ">>> Processing backups for section: $section <<<"
-        # Extract additional variables from config
-        while IFS= read -r line || [ -n "$line" ]; do
-            if [[ $line =~ ^date_format=(.*) ]]; then
+        
+        # Extract additional variables from config for current section
+        while IFS= read -r line2 || [ -n "$line2" ]; do
+            if [[ $line2 =~ ^date_format=(.*) ]]; then
                 date_format="${BASH_REMATCH[1]}"
-            elif [[ $line =~ ^extension=(.*) ]]; then
+            elif [[ $line2 =~ ^extension=(.*) ]]; then
                 extension="${BASH_REMATCH[1]}"
-            elif [[ $line =~ ^keep=(.*) ]]; then
+            elif [[ $line2 =~ ^keep=(.*) ]]; then
                 keep="${BASH_REMATCH[1]}"
-            elif [[ $line =~ ^keep_full=(.*) ]]; then
+            elif [[ $line2 =~ ^keep_full=(.*) ]]; then
                 keep_full="${BASH_REMATCH[1]}"
-            elif [[ $line =~ ^keep_diff=(.*) ]]; then
+            elif [[ $line2 =~ ^keep_diff=(.*) ]]; then
                 keep_diff="${BASH_REMATCH[1]}"
-            elif [[ $line =~ ^keep_incr=(.*) ]]; then
+            elif [[ $line2 =~ ^keep_incr=(.*) ]]; then
                 keep_incr="${BASH_REMATCH[1]}"
             fi
         done < "$SCRIPT_DIR/config.ini"
+        
         log_message "Variables: date_format=$date_format, extension=$extension, keep=$keep, keep_full=$keep_full, keep_diff=$keep_diff, keep_incr=$keep_incr"
         process_backups "$section" "$date_format" "$extension" "$keep" "$keep_full" "$keep_diff" "$keep_incr"
+        
+        # Reset variables for the next section
+        date_format=""
+        extension=""
+        keep=""
+        keep_full=""
+        keep_diff=""
+        keep_incr=""
     fi
 done < "$SCRIPT_DIR/config.ini"
 
