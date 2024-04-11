@@ -2,12 +2,14 @@
 
 # Function to log errors
 log_error() {
-    echo "$(date +'%Y-%m-%d %H:%M:%S') ERROR: $1" >> "logs/$(date +'%Y-%m-%d')_error.log"
+    message="$(date +'%Y-%m-%d %H:%M:%S') ERROR: $1"
+    echo "$message" | tee -a "logs/$(date +'%Y-%m-%d')_error.log"
 }
 
 # Function to log messages
 log_message() {
-    echo "$(date +'%Y-%m-%d %H:%M:%S') INFO: $1" >> "logs/$(date +'%Y-%m-%d')_garbage_collector.log"
+    message="$(date +'%Y-%m-%d %H:%M:%S') INFO: $1"
+    echo "$message" | tee -a "logs/$(date +'%Y-%m-%d')_garbage_collector.log"
 }
 
 # Function to delete files
@@ -28,6 +30,12 @@ fi
 while IFS= read -r line || [ -n "$line" ]; do
     if [[ $line =~ ^\[(.*)\] ]]; then
         section="${BASH_REMATCH[1]}"
+        log_message "Entering directory: $section"
+        # Enter directory
+        if ! cd "$section"; then
+            log_error "Failed to enter directory $section"
+            continue
+        fi
     elif [[ $line =~ ^keep_full=([0-9]+),([0-9]+),([0-9]+),([0-9]+) ]]; then
         full_keep=("${BASH_REMATCH[@]:1}")
     elif [[ $line =~ ^keep_diff=([0-9]+),([0-9]+),([0-9]+),([0-9]+) ]]; then
@@ -38,8 +46,6 @@ while IFS= read -r line || [ -n "$line" ]; do
         keep=("${BASH_REMATCH[@]:1}")
         # Process backups for this section
         log_message "Processing backups for section: $section"
-        # Enter directory
-        cd "$section" || { log_error "Failed to enter directory $section"; exit 1; }
         # Determine current date
         current_year=$(date +'%Y')
         current_month=$(date +'%m')
