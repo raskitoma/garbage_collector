@@ -23,6 +23,8 @@ delete_file() {
     # rm "$file"
 }
 
+marked_for_deletion=()
+
 # Function to process backups in a folder
 process_backups() {
     folder="$1"
@@ -43,8 +45,6 @@ process_backups() {
             continue
         fi
 
-        log_message "Processing file: $file"
-
         # Check if keeper_policy is set
         if [ -n "${keeper_policy[0]}" ]; then
             # Assign policy values
@@ -52,6 +52,25 @@ process_backups() {
             keep_monthly="${keeper_policy[1]}"
             keep_weekly="${keeper_policy[2]}"
             keep_daily="${keeper_policy[3]}"
+
+            # Yearly keeper policy
+            if [ "$keep_yearly" -gt 0 ]; then
+                # Check if the file matches the format and decide whether to keep it based on the policy
+                if [[ $file =~ ^${keeper_prefix[1]}[0-9]{4}$date_format\.$extension$ ]]; then
+                    log_message "processing file: $file"
+
+                    # lets check if the file is the last one in the year
+                    year="${file:5:4}"
+                    if [ ! -f "${keeper_prefix[1]}$(($year + 1))$date_format.$extension" ]; then
+                        marked_for_deletion+=("$file")
+                    else 
+                        log_message "keeping file: $file"
+                    fi
+                    
+
+
+                fi
+            fi
             
             # Your logic to handle the file based on the keeper policy goes here
             # For example:
