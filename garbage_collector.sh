@@ -42,7 +42,7 @@ process_backups() {
         # first, checks if the file is a directory
         if [ -d "$file" ]; then
             log_message "> Processing subfolder: $file"
-            process_backups "$file" "$date_format" "$extension" "${keeper_policy[@]}"
+            process_backups "$file" "$date_format" "$extension" "$4" "$5" "$6" "$7"
             continue
         fi
 
