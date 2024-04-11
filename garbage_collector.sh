@@ -53,6 +53,12 @@ process_backups() {
             keep_weekly="${keeper_policy[2]}"
             keep_daily="${keeper_policy[3]}"
 
+            expected_filename_template = "${keeper_prefix[1]}[0-9]{4}$date_format\.$extension$"
+
+            log_message "processing file: $file with current policy: ${keeper_policy[@]} as ${keeper_prefix[@]} with date format: $date_format and extension: $extension"
+            log_message "with expected filename template: $expected_filename_template"
+            log_message "Yearly is set to $keep_yearly, Monthly is set to $keep_monthly, Weekly is set to $keep_weekly, Daily is set to $keep_daily"
+
             # Yearly keeper policy
             if [ "$keep_yearly" -gt 0 ]; then
                 # Check if the file matches the format and decide whether to keep it based on the policy
