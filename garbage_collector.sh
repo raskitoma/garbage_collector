@@ -92,7 +92,7 @@ fi
 while IFS= read -r line || [ -n "$line" ]; do
     if [[ $line =~ ^\[(.*)\] ]]; then
         section="${BASH_REMATCH[1]}"
-        log_message "Entering directory: $section"
+        log_message "Entering section: $section"
         process_backups "$section"
     fi
 done < "$SCRIPT_DIR/config.ini"
