@@ -46,15 +46,16 @@ process_backups() {
             continue
         fi
 
-        for keep_policy in "${!keeper_policy[@]}"; do
-            # get index of keeper_policy in keeper_policy array
-            my_index=$(echo ${keeper_policy[@]} | grep -o "\b$keep_policy\b" | wc -l)
+        policy_index=0
 
-            log_message "my index: $my_index"
+        for keep_policy in "${!keeper_policy[@]}"; do
+            ((policy_index++))
+            
+            log_message "my index: $policy_index"
 
             # Check if policy is set (not empty)
             if [ -z "${keeper_policy[$keep_policy]}" ]; then
-                log_message "> Policy ${keeper_policy_name[$my_index]} is not set. Skipping."
+                log_message "> Policy ${keeper_policy_name[$policy_index]} is not set. Skipping."
                 continue
             fi
 
