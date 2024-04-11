@@ -33,7 +33,8 @@ process_backups() {
     for file in *; do
         log_message "Processing file: $file"
         # Check if the file matches the pattern (yyyy-mm-dd)
-        if [[ $file =~ ^([0-9]{4}-[0-9]{2}-[0-9]{2}) ]]; then
+        if [[ $file =~ ^([0-9]{4}-[0-9]{2}-[0-9]{2}|[0-9]{8}) ]]; then
+
             backup_date="${BASH_REMATCH[1]}"
             current_year=$(date +'%Y')
             current_month=$(date +'%m')
