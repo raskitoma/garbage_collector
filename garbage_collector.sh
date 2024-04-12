@@ -45,8 +45,8 @@ process_backups() {
             process_backups "$file" "$date_format" "$extension" "$4" "$5" "$6" "$7"
             continue
         fi
-
-        # Iterate through each value in keeper_policy
+        # below, applies when the "file" is not a directory
+        # Iterate through each value in keeper_policy in config.ini
         for ((i = 0; i < ${#keeper_policy[@]}; i++)); do
             # Get the index
             index=$i
@@ -56,20 +56,13 @@ process_backups() {
             else
                 log_message "${keeper_policy_name[$index]} is enabled as ${keeper_prefix[$index]}${keeper_policy[$i]}."
 
-                # Define the template
-                template_for_file_name="${keeper_prefix[$index]// /.}*$extension"
+                # get all files, not directories, that start with ${keeper_prefix[$index]} and end with $extension
+                policy_files=($(ls -1 | grep -E "^${keeper_prefix[$index]}.*$extension$"))
 
-                # Remove spaces from the template
-                template_for_file_name="${template_for_file_name// /.}"
+                log_message "policy_files: ${policy_files[@]}"
+                log_message "policy_files count: ${#policy_files[@]}"                 
 
-                log_message "Template for file name: $template_for_file_name"
 
-                # Check if the file matches the template expression
-                if [[ "$file" =~ $template_for_file_name ]]; then
-                    log_message "$file matches the template expression."
-                else
-                    log_message "$file doesn't have a matching template expression. Skipping file."
-                fi
 
             fi
         done
