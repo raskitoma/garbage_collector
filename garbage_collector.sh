@@ -53,20 +53,97 @@ process_backups() {
         done
     fi
 
+    # if the directory is not empty, check if this subfolder has subfolders YY, MM, WW. If not, create them.
+    if [ ! -d "YY" ]; then
+        mkdir "YY" || { log_error "Failed to create YY directory. Exiting."; cd ..; return; }
+    fi
+    if [ ! -d "MM" ]; then
+        mkdir "MM" || { log_error "Failed to create MM directory. Exiting."; cd ..; return; }
+    fi
+    if [ ! -d "WW" ]; then
+        mkdir "WW" || { log_error "Failed to create WW directory. Exiting."; cd ..; return; }
+    fi
+
     # if the directory is not empty, then process policies:
     for ((i = 0; i < ${#keeper_policy[@]}; i++)); do
         # Get the index
         index=$i
         # Check if keeper_policy value is empty
         if [[ -z "${keeper_policy[$i]}" ]]; then
-            log_message "${keeper_policy_name[$index]} is disabled."
+            log_message "> ${keeper_policy_name[$index]} is disabled."
         else
-            log_message "${keeper_policy_name[$index]} is enabled as ${keeper_prefix[$index]}${keeper_policy[$i]}."
+            log_message "> ${keeper_policy_name[$index]} is enabled as ${keeper_prefix[$index]}${keeper_policy[$i]}."
 
             # get all files, not directories, that start with ${keeper_prefix[$index]} and end with $extension
             files=($(ls -1 | grep -E "^${keeper_prefix[$index]}.*$extension$"))
-            log_message "files: ${files[@]}"
-            log_message "files count: ${#files[@]}"
+
+            # if there is no files, then skip
+            if [ ${#files[@]} -eq 0 ]; then
+                log_message "No ${keeper_policy_name[$index]} backups found. Skipping."
+                continue
+            fi
+
+            # let's check each policy, each policy, if available will be a set of 4 flags, first flag being yearly, second being monthly, third being weekly, fourth being daily
+            # yearly means keep the last backup file of each year if yearly is 1
+            # monthly means keep the last backup file of each month if monthly is 1 for current year
+            # weekly means keep the last backup file of each week if weekly is 1 for current month
+            # daily means keep the last backup file of each day if daily is 1 for current week
+
+            pol_yy=${keeper_policy[$i]:0:1}
+            pol_mm=${keeper_policy[$i]:1:1}
+            pol_ww=${keeper_policy[$i]:2:1}
+            pol_dd=${keeper_policy[$i]:3:1}
+
+            # let's get the current year, month, week and day
+            current_year=$(date +'%Y')
+            current_month=$(date +'%m')
+            current_week=$(date +'%U')
+            current_day=$(date +'%d')
+
+            # let's process the yearly if enabled
+            if [ $pol_yy -eq 1 ]; then
+                # let's get the list of files actually stored in the YY subfolder
+                yy_files=($(ls -1 YY | grep -E "^${keeper_prefix[$index]}.*$extension$"))
+
+                checked_files=()
+                # get the last backup file for current year from files array.
+                # The file has the date in the format specified in the config file inside it filename
+                # so we need to check the files array and find the file with the latest date in its naming
+                for file in "${files[@]}"; do
+                    # get the date from the file name
+                    file_date=$(echo "$file" | grep -oP "(\d{4}-\d{2}-\d{2})")
+                    # get the year from the date
+                    file_year=$(date -d "$file_date" +'%Y')
+                    # if the year is the current year, then add it to th
+                    if [ "$file_year" -eq "$current_year" ]; then
+                        checked_files+=("$file")
+                    fi
+                done
+
+                # if there are no files for the current year, then skip
+                if [ ${#checked_files[@]} -eq 0 ]; then
+                    log_message "No ${keeper_policy_name[$index]} backups found for the current year. Skipping."
+                    continue
+                fi
+
+                # let's get the latest file for the current year
+                latest_file=$(printf "%s\n" "${checked_files[@]}" | sort -r | head -n 1)
+
+                # log the latest file and the yy_files
+                log_message "Latest ${keeper_policy_name[$index]} backup for the current year: $latest_file"
+
+
+            
+
+                
+
+
+            fi
+
+            
+            
+
+
 
         fi
     done
