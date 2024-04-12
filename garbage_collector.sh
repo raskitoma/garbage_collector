@@ -129,8 +129,30 @@ process_backups() {
                 # let's get the latest file for the current year
                 latest_file=$(printf "%s\n" "${checked_files[@]}" | sort -r | head -n 1)
 
-                # log the latest file and the yy_files
+                # log the new latest file and the yy_files
                 log_message "Latest ${keeper_policy_name[$index]} backup for the current year: $latest_file"
+
+                # let's check if the new latest file is already in the YY folder if not, check if we have for the current year a previous lastest_file. If we have, then mark the previous latest_file for deletion and copy the new latest file to the YY folder
+                if [ ! -f "YY/$latest_file" ]; then
+                    # let's check if we have a previous latest file for the current year
+                    if [ ${#yy_files[@]} -gt 0 ]; then
+                        # let's mark the previous latest file for deletion
+                        for yy_file in "${yy_files[@]}"; do
+                            if [ "$yy_file" != "$latest_file" ]; then
+                                marked_for_deletion+=("YY/$yy_file")
+                            fi
+                        done
+                    fi
+                    # let's copy the new latest file to the YY folder
+                    cp "$latest_file" "YY/$latest_file"
+                fi
+
+                # list the files marked for deletion
+                if [ ${#marked_for_deletion[@]} -gt 0 ]; then
+                    log_message "Marked for deletion: ${marked_for_deletion[@]}"
+                fi
+                
+                
 
 
             
