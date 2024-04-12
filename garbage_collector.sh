@@ -37,36 +37,38 @@ process_backups() {
     cd "$folder" || { log_error "Failed to enter directory $folder"; return; }
     log_message "> Entering directory: $folder"
     
-    # Loop through files in the directory
-    for file in *; do
-        # first, checks if the file is a directory
-        if [ -d "$file" ]; then
-            log_message "> Processing subfolder: $file with policy: (std: $4 | full: $5 | diff: $6 | incr: $7)"
-            process_backups "$file" "$date_format" "$extension" "$4" "$5" "$6" "$7"
-            continue
-        fi
-        # below, applies when the "file" is not a directory
-        # Iterate through each value in keeper_policy in config.ini
-        for ((i = 0; i < ${#keeper_policy[@]}; i++)); do
-            # Get the index
-            index=$i
-            # Check if keeper_policy value is empty
-            if [[ -z "${keeper_policy[$i]}" ]]; then
-                log_message "${keeper_policy_name[$index]} is disabled."
-            else
-                log_message "${keeper_policy_name[$index]} is enabled as ${keeper_prefix[$index]}${keeper_policy[$i]}."
+    # Check if the directory is empty
+    if [ -z "$(ls -A)" ]; then
+        log_message "Directory is empty. Exiting."
+        cd ..
+        return
+    fi
 
-                # get all files, not directories, that start with ${keeper_prefix[$index]} and end with $extension
-                policy_files=($(ls -1 | grep -E "^${keeper_prefix[$index]}.*$extension$"))
-
-                log_message "policy_files: ${policy_files[@]}"
-                log_message "policy_files count: ${#policy_files[@]}"                 
-
-
-
-            fi
+    # let's check if it has subfolders
+    subfolders=($(find . -mindepth 1 -maxdepth 1 -type d))
+    if [ ${#subfolders[@]} -gt 0 ]; then
+        log_message "Directory has subfolders. Processing subfolders."
+        for subfolder in "${subfolders[@]}"; do
+            process_backups "$subfolder" "$date_format" "$extension" "$4" "$5" "$6" "$7"
         done
-        
+    fi
+
+    # if the directory is not empty, then process policies:
+    for ((i = 0; i < ${#keeper_policy[@]}; i++)); do
+        # Get the index
+        index=$i
+        # Check if keeper_policy value is empty
+        if [[ -z "${keeper_policy[$i]}" ]]; then
+            log_message "${keeper_policy_name[$index]} is disabled."
+        else
+            log_message "${keeper_policy_name[$index]} is enabled as ${keeper_prefix[$index]}${keeper_policy[$i]}."
+
+            # get all files, not directories, that start with ${keeper_prefix[$index]} and end with $extension
+            files=($(ls -1 | grep -E "^${keeper_prefix[$index]}.*$extension$"))
+            log_message "files: ${files[@]}"
+            log_message "files count: ${#files[@]}"
+
+        fi
     done
 
     cd ..
