@@ -102,12 +102,30 @@ process_backups() {
             pol_ww=${keeper_policy[$i]:2:1}
             pol_dd=${keeper_policy[$i]:3:1}
 
-            # Convert extracted values to integers and set default value to 0 if they are null
-            pol_yy=$(( ${pol_yy:-0} ))
-            pol_mm=$(( ${pol_mm:-0} ))
-            pol_ww=$(( ${pol_ww:-0} ))
-            pol_dd=$(( ${pol_dd:-0} ))
+            # Convert extracted values to integers and set default value to 0 if they are null or empty
+            if [[ -n $pol_yy && "$pol_yy" =~ ^[0-9]+$ ]]; then
+                pol_yy=$((pol_yy))
+            else
+                pol_yy=0
+            fi
 
+            if [[ -n $pol_mm && "$pol_mm" =~ ^[0-9]+$ ]]; then
+                pol_mm=$((pol_mm))
+            else
+                pol_mm=0
+            fi
+
+            if [[ -n $pol_ww && "$pol_ww" =~ ^[0-9]+$ ]]; then
+                pol_ww=$((pol_ww))
+            else
+                pol_ww=0
+            fi
+
+            if [[ -n $pol_dd && "$pol_dd" =~ ^[0-9]+$ ]]; then
+                pol_dd=$((pol_dd))
+            else
+                pol_dd=0
+            fi
             # let's get the current year, month, week and day
             current_year=$(date +'%Y')
             current_month=$(date +'%m')
