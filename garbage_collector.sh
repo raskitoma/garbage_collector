@@ -68,11 +68,7 @@ process_backups() {
             if [ ! -d "WW" ]; then
                 mkdir "WW" 2>/dev/null
             fi
-        else
-            echo "Subdirectories exist. Skipping creation of YY, MM, and WW."
         fi
-    else
-        echo "Directory is empty."
     fi
 
     # if the directory is not empty, then process policies:
