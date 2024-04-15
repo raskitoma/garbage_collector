@@ -354,6 +354,14 @@ process_backups() {
         fi
     done
 
+    # List files marked for deletion
+    if [ ${#marked_for_deletion[@]} -gt 0 ]; then
+        log_message "Marked for deletion: ${marked_for_deletion[@]}"
+        for file in "${marked_for_deletion[@]}"; do
+            delete_file "$file"
+        done
+    fi
+
     cd ..
 }
 
