@@ -298,6 +298,46 @@ process_backups() {
             fi
 
             # let's process the daily if enabled
+            if [ $pol_dd -eq 1 ]; then
+                # let's get the list of files actually stored in the current folder
+                checked_files=()
+                # get the last backup file for current day from files array.
+                # The file has the date in the format specified in the config file inside it filename
+                # so we need to check the files array and find the file with the latest date in its naming
+                for file in "${files[@]}"; do
+                    # get the date from the file name
+                    file_date=$(echo "$file" | grep -oP "(\d{4}-\d{2}-\d{2})")
+                    # get the year from the date
+                    file_year=$(date -d "$file_date" +'%Y')
+                    # get the month from the date
+                    file_month=$(date -d "$file_date" +'%m')
+                    # get the week from the date
+                    file_week=$(date -d "$file_date" +'%U')
+                    # get the day from the date
+                    file_day=$(date -d "$file_date" +'%d')
+                    # if the year is the current year, the month is the current month, the week is the current week and the day is the current day, then add it to the checked_files array
+                    if [ "$file_year" -eq "$current_year" ] && [ "$file_month" -eq "$current_month" ] && [ "$file_week" -eq "$current_week" ] && [ "$file_day" -eq "$current_day" ]; then
+                        checked_files+=("$file")
+                    fi
+                done
+
+                # if there are no files for the current day, then skip
+                if [ ${#checked_files[@]} -eq 0 ]; then
+                    log_message "No ${keeper_policy_name[$index]} backups found for the current day. Skipping."
+                    continue
+                fi
+
+                # let's get the latest file for the current day
+                latest_file=$(printf "%s\n" "${checked_files[@]}" | sort -r | head -n 1)
+
+                # log the new latest file
+                log_message "Latest ${keeper_policy_name[$index]} backup for the current day: $latest_file"
+
+            fi
+        
+
+
+
 
 
 
