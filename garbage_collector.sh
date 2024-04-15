@@ -161,6 +161,11 @@ process_backups() {
                 # let's get the latest file for the current year
                 latest_file=$(printf "%s\n" "${checked_files[@]}" | sort -r | head -n 1)
 
+                # show checked files, and the latest_file
+                log_message "Checked files for the current year: ${checked_files[@]}"
+                log_message "Latest ${keeper_policy_name[$index]} backup for the current year: $latest_file"
+                
+
                 # log the new latest file and the yy_files
                 log_message "Latest ${keeper_policy_name[$index]} backup for the current year: $latest_file"
 
@@ -251,7 +256,6 @@ process_backups() {
                 if [ ${#marked_for_deletion[@]} -gt 0 ]; then
                     log_message "Marked for deletion: ${marked_for_deletion[@]}"
                 fi
-
             fi
 
             # let's process the weekly if enabled
