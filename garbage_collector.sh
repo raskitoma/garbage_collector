@@ -162,6 +162,8 @@ process_backups() {
 
             # let's process the monthly if enabled
             log_message "Checking MM folder"
+            echo "Value of \$pol_mm: $pol_mm"
+            echo "Type of \$pol_mm: $(declare -p pol_mm)"            
             if [ $pol_mm -eq 1 ]; then
                 # let's get the list of files actually stored in the MM subfolder
                 mm_files=($(ls -1 MM | grep -E "^${keeper_prefix[$index]}.*$extension$"))
