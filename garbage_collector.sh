@@ -96,16 +96,17 @@ process_backups() {
             # weekly means keep the last backup file of each week if weekly is 1 for current month
             # daily means keep the last backup file of each day if daily is 1 for current week
 
+            # Extract values from keeper_policy array
             pol_yy=${keeper_policy[$i]:0:1}
             pol_mm=${keeper_policy[$i]:1:1}
             pol_ww=${keeper_policy[$i]:2:1}
             pol_dd=${keeper_policy[$i]:3:1}
 
-            # checks if flags are empty, if they are, then set them to 0
-            pol_yy=${pol_yy:-0}
-            pol_mm=${pol_mm:-0}
-            pol_ww=${pol_ww:-0}
-            pol_dd=${pol_dd:-0}
+            # Convert extracted values to integers and set default value to 0 if they are null
+            pol_yy=$((10#${pol_yy:-0}))
+            pol_mm=$((10#${pol_mm:-0}))
+            pol_ww=$((10#${pol_ww:-0}))
+            pol_dd=$((10#${pol_dd:-0}))
 
             # let's get the current year, month, week and day
             current_year=$(date +'%Y')
