@@ -44,8 +44,8 @@ process_backups() {
         return
     fi
 
-    # let's check if it has subfolders
-    subfolders=($(find . -mindepth 1 -maxdepth 1 -type d))
+    # let's check if it has subfolders excluding YY, MM, and WW
+    subfolders=($(find . -mindepth 1 -maxdepth 1 -type d -not \( -name "YY" -o -name "MM" -o -name "WW" \)))
     if [ ${#subfolders[@]} -gt 0 ]; then
         log_message "Directory has subfolders. Processing subfolders."
         for subfolder in "${subfolders[@]}"; do
@@ -53,15 +53,20 @@ process_backups() {
         done
     fi
 
+
     # if the directory is not empty, check if this subfolder has subfolders YY, MM, WW. If not, create them.
-    if [ ! -d "YY" ]; then
-        mkdir "YY" || { log_error "Failed to create YY directory. Exiting."; cd ..; return; }
-    fi
-    if [ ! -d "MM" ]; then
-        mkdir "MM" || { log_error "Failed to create MM directory. Exiting."; cd ..; return; }
-    fi
-    if [ ! -d "WW" ]; then
-        mkdir "WW" || { log_error "Failed to create WW directory. Exiting."; cd ..; return; }
+    if [ "$(ls -A)" ]; then
+        # Check if there are no subdirectories
+        if [ -z "$(find . -maxdepth 1 -type d -not -name '.' -not -name 'YY' -not -name 'MM' -not -name 'WW')" ]; then
+            # Create subdirectories YY, MM, and WW
+            mkdir "YY" || { log_error "Failed to create YY directory. Exiting."; cd ..; return; }
+            mkdir "MM" || { log_error "Failed to create MM directory. Exiting."; cd ..; return; }
+            mkdir "WW" || { log_error "Failed to create WW directory. Exiting."; cd ..; return; }
+        else
+            echo "Subdirectories exist. Skipping creation of YY, MM, and WW."
+        fi
+    else
+        echo "Directory is empty."
     fi
 
     # if the directory is not empty, then process policies:
