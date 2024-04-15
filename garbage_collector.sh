@@ -163,7 +163,7 @@ process_backups() {
             # let's process the monthly if enabled
             if [ $pol_mm -eq 1 ]; then
                 # let's get the list of files actually stored in the MM subfolder
-                echo "MM"
+                log_message "Checking MM folder"
                 mm_files=($(ls -1 MM | grep -E "^${keeper_prefix[$index]}.*$extension$"))
 
                 checked_files=()
