@@ -53,8 +53,8 @@ process_backups() {
         done
     fi
 
-
     # if the directory is not empty, check if this subfolder has subfolders YY, MM, WW. If not, create them.
+    # but it creates them only in the last level, i.e. the same where the daily backups are stored
     if [ "$(ls -A)" ]; then
         # Check if there are no subdirectories
         if [ -z "$(find . -maxdepth 1 -type d -not -name '.' -not -name 'YY' -not -name 'MM' -not -name 'WW')" ]; then
@@ -119,7 +119,7 @@ process_backups() {
                     file_date=$(echo "$file" | grep -oP "(\d{4}-\d{2}-\d{2})")
                     # get the year from the date
                     file_year=$(date -d "$file_date" +'%Y')
-                    # if the year is the current year, then add it to th
+                    # if the year is the current year, then add it to the checked_files array
                     if [ "$file_year" -eq "$current_year" ]; then
                         checked_files+=("$file")
                     fi
@@ -156,16 +156,155 @@ process_backups() {
                 if [ ${#marked_for_deletion[@]} -gt 0 ]; then
                     log_message "Marked for deletion: ${marked_for_deletion[@]}"
                 fi
+            fi
+
+            # let's process the monthly if enabled
+            if [ $pol_mm -eq 1 ]; then
+                # let's get the list of files actually stored in the MM subfolder
+                mm_files=($(ls -1 MM | grep -E "^${keeper_prefix[$index]}.*$extension$"))
+
+                checked_files=()
+                # get the last backup file for current month from files array.
+                # The file has the date in the format specified in the config file inside it filename
+                # so we need to check the files array and find the file with the latest date in its naming
+                for file in "${files[@]}"; do
+                    # get the date from the file name
+                    file_date=$(echo "$file" | grep -oP "(\d{4}-\d{2}-\d{2})")
+                    # get the year from the date
+                    file_year=$(date -d "$file_date" +'%Y')
+                    # get the month from the date
+                    file_month=$(date -d "$file_date" +'%m')
+                    # if the year is the current year and the month is the current month, then add it to the checked_files array
+                    if [ "$file_year" -eq "$current_year" ] && [ "$file_month" -eq "$current_month" ]; then
+                        checked_files+=("$file")
+                    fi
+                done
+
+                # if there are no files for the current month, then skip
+                if [ ${#checked_files[@]} -eq 0 ]; then
+                    log_message "No ${keeper_policy_name[$index]} backups found for the current month. Skipping."
+                    continue
+                fi
+
+                # let's get the latest file for the current month
+                latest_file=$(printf "%s\n" "${checked_files[@]}" | sort -r | head -n 1)
+
+                # log the new latest file and the mm_files
+                log_message "Latest ${keeper_policy_name[$index]} backup for the current month: $latest_file"
+
+                # let's check if the new latest file is already in the MM folder if not, check if we have for the current month a previous lastest_file. If we have, then mark the previous latest_file for deletion and copy the new latest file to the MM folder
+                if [ ! -f "MM/$latest_file" ]; then
+                    # let's check if we have a previous latest file for the current month
+                    if [ ${#mm_files[@]} -gt 0 ]; then
+                        # let's mark the previous latest file for deletion
+                        for mm_file in "${mm_files[@]}"; do
+                            if [ "$mm_file" != "$latest_file" ]; then
+                                marked_for_deletion+=("MM/$mm_file")
+                            fi
+                        done
+                    fi
+                    # let's copy the new latest file to the MM folder
+                    cp "$latest_file" "MM/$latest_file"
+                fi
+
+                # Let's do a clean up of the MM folder
+                # Let's check if there any files in the MM folder that are not from the current year
+                for mm_file in "${mm_files[@]}"; do
+                    # get the date from the file name
+                    file_date=$(echo "$mm_file" | grep -oP "(\d{4}-\d{2}-\d{2})")
+                    # get the year from the date
+                    file_year=$(date -d "$file_date" +'%Y')
+                    # if the year is not the current year, then mark the file for deletion
+                    if [ "$file_year" -ne "$current_year" ]; then
+                        marked_for_deletion+=("MM/$mm_file")
+                    fi
+                done
                 
-                
-
-
-            
-
-                
-
+                # list the files marked for deletion
+                if [ ${#marked_for_deletion[@]} -gt 0 ]; then
+                    log_message "Marked for deletion: ${marked_for_deletion[@]}"
+                fi
 
             fi
+
+            # let's process the weekly if enabled
+            if [ $pol_ww -eq 1 ]; then
+                # let's get the list of files actually stored in the WW subfolder
+                ww_files=($(ls -1 WW | grep -E "^${keeper_prefix[$index]}.*$extension$"))
+
+                checked_files=()
+                # get the last backup file for current week from files array.
+                # The file has the date in the format specified in the config file inside it filename
+                # so we need to check the files array and find the file with the latest date in its naming
+                for file in "${files[@]}"; do
+                    # get the date from the file name
+                    file_date=$(echo "$file" | grep -oP "(\d{4}-\d{2}-\d{2})")
+                    # get the year from the date
+                    file_year=$(date -d "$file_date" +'%Y')
+                    # get the week from the date
+                    file_week=$(date -d "$file_date" +'%U')
+                    # if the year is the current year and the week is the current week, then add it to the checked_files array
+                    if [ "$file_year" -eq "$current_year" ] && [ "$file_week" -eq "$current_week" ]; then
+                        checked_files+=("$file")
+                    fi
+                done
+
+                # if there are no files for the current week, then skip
+                if [ ${#checked_files[@]} -eq 0 ]; then
+                    log_message "No ${keeper_policy_name[$index]} backups found for the current week. Skipping."
+                    continue
+                fi
+
+                # let's get the latest file for the current week
+                latest_file=$(printf "%s\n" "${checked_files[@]}" | sort -r | head -n 1)
+
+                # log the new latest file and the ww_files
+                log_message "Latest ${keeper_policy_name[$index]} backup for the current week: $latest_file"
+
+                # let's check if the new latest file is already in the WW folder if not, check if we have for the current week a previous lastest_file. If we have, then mark the previous latest_file for deletion and copy the new latest file to the WW folder
+                if [ ! -f "WW/$latest_file" ]; then
+                    # let's check if we have a previous latest file for the current
+                    if [ ${#ww_files[@]} -gt 0 ]; then
+                        # let's mark the previous latest file for deletion
+                        for ww_file in "${ww_files[@]}"; do
+                            if [ "$ww_file" != "$latest_file" ]; then
+                                marked_for_deletion+=("WW/$ww_file")
+                            fi
+                        done
+                    fi
+                    # let's copy the new latest file to the WW folder
+                    cp "$latest_file" "WW/$latest_file"
+                fi
+
+                # Let's do a clean up of the WW folder
+                # Let's check if there any files in the WW folder that are not from the current month
+                for ww_file in "${ww_files[@]}"; do
+                    # get the date from the file name
+                    file_date=$(echo "$ww_file" | grep -oP "(\d{4}-\d{2}-\d{2})")
+                    # get the year from the date
+                    file_year=$(date -d "$file_date" +'%Y')
+                    # get the month from the date
+                    file_month=$(date -d "$file_date" +'%m')
+                    # if the year is not the current year or the month is not the current month, then mark the file for deletion
+                    if [ "$file_year" -ne "$current_year" ] || [ "$file_month" -ne "$current_month" ]; then
+                        marked_for_deletion+=("WW/$ww_file")
+                    fi
+                done
+
+                # list the files marked for deletion
+                if [ ${#marked_for_deletion[@]} -gt 0 ]; then
+                    log_message "Marked for deletion: ${marked_for_deletion[@]}"
+                fi
+            fi
+
+            # let's process the daily if enabled
+
+
+
+
+
+
+
 
             
             
