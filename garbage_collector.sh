@@ -101,6 +101,12 @@ process_backups() {
             pol_ww=${keeper_policy[$i]:2:1}
             pol_dd=${keeper_policy[$i]:3:1}
 
+            # checks if flags are empty, if they are, then set them to 0
+            pol_yy=${pol_yy:-0}
+            pol_mm=${pol_mm:-0}
+            pol_ww=${pol_ww:-0}
+            pol_dd=${pol_dd:-0}
+
             # let's get the current year, month, week and day
             current_year=$(date +'%Y')
             current_month=$(date +'%m')
@@ -161,9 +167,6 @@ process_backups() {
             fi
 
             # let's process the monthly if enabled
-            log_message "Checking MM folder"
-            echo "Value of \$pol_mm: $pol_mm"
-            echo "Type of \$pol_mm: $(declare -p pol_mm)"            
             if [ $pol_mm -eq 1 ]; then
                 # let's get the list of files actually stored in the MM subfolder
                 mm_files=($(ls -1 MM | grep -E "^${keeper_prefix[$index]}.*$extension$"))
