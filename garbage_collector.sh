@@ -59,9 +59,15 @@ process_backups() {
         # Check if there are no subdirectories
         if [ -z "$(find . -maxdepth 1 -type d -not -name '.' -not -name 'YY' -not -name 'MM' -not -name 'WW')" ]; then
             # Create subdirectories YY, MM, and WW
-            mkdir "YY" || { log_error "Failed to create YY directory. Exiting."; cd ..; return; }
-            mkdir "MM" || { log_error "Failed to create MM directory. Exiting."; cd ..; return; }
-            mkdir "WW" || { log_error "Failed to create WW directory. Exiting."; cd ..; return; }
+            if [ ! -d "YY" ]; then
+                mkdir "YY" 2>/dev/null
+            fi
+            if [ ! -d "MM" ]; then
+                mkdir "MM" 2>/dev/null
+            fi
+            if [ ! -d "WW" ]; then
+                mkdir "WW" 2>/dev/null
+            fi
         else
             echo "Subdirectories exist. Skipping creation of YY, MM, and WW."
         fi
