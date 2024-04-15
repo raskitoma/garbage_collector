@@ -333,6 +333,24 @@ process_backups() {
                 # log the new latest file
                 log_message "Latest ${keeper_policy_name[$index]} backup for the current day: $latest_file"
 
+                # Mark for deletion files who are not from the current week, being current week the one that starts on this week on monday
+                for file in "${files[@]}"; do
+                    # get the date from the file name
+                    file_date=$(echo "$file" | grep -oP "(\d{4}-\d{2}-\d{2})")
+                    # get the year from the date
+                    file_year=$(date -d "$file_date" +'%Y')
+                    # get the month from the date
+                    file_month=$(date -d "$file_date" +'%m')
+                    # get the week from the date
+                    file_week=$(date -d "$file_date" +'%U')
+                    # get the day from the date
+                    file_day=$(date -d "$file_date" +'%d')
+                    # if the year is the current year, the month is the current month, the week is the current week and the day is the current day, then add it to the checked_files array
+                    if [ "$file_year" -eq "$current_year" ] && [ "$file_month" -eq "$current_month" ] && [ "$file_week" -ne "$current_week" ]; then
+                        marked_for_deletion+=("$file")
+                    fi
+                done
+
             fi
         
 
